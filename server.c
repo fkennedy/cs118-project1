@@ -13,6 +13,7 @@ const int RC_ERROR = -1;
 
 // Constants
 const int MAX_NUM_CONNECTIONS = 5;
+const int BUFFER_SIZE = 1024;
 
 void error (char *msg) {
 	perror(msg);
@@ -57,11 +58,13 @@ int main (int argc, char* argv[]) {
 		error("ERROR: could not accept connection");
 
 	// Read client request
-	char buffer[256];
-	memset(buffer, 0, 256);
+	char buffer[BUFFER_SIZE];
+	memset(buffer, 0, BUFFER_SIZE);
 
-	if ((read(newsockfd, buffer, 25)) == RC_ERROR)
+	if ((read(newsockfd, buffer, BUFFER_SIZE - 1)) == RC_ERROR)
 		error("ERROR: could not read from socket");
+
+	printf("Here is the message: %s\n", buffer);
 
 	// Reply to client
 	if ((write(newsockfd, "I got your message", 18)) == RC_ERROR)
