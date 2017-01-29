@@ -20,7 +20,8 @@ Part B
 2. Add support to the function for GIF and JPEG images
 	- browser should be able to display these images
 
-
 -------------------------------------
 NOTES
+
+Sockets Tutorial: http://www.linuxhowtos.org/C_C++/socket.htm
 
