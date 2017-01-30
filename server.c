@@ -52,7 +52,7 @@ int main (int argc, char* argv[]) {
 
 	// Listen for connections
 	listen(sockfd, MAX_NUM_CONNECTIONS);
-	printf("Server listening on port: %d\n", portno);
+	printf("Server listening on port: %d\n\n", portno);
 
 	while (1) {
 		// Accept connections
@@ -68,7 +68,13 @@ int main (int argc, char* argv[]) {
 
 		printf("Here is the message: \n\n%s\n", buffer);
 
-		// TODO: process HTTP request from buffer
+		// TODO: remove variables that are not used
+		char* host, content_requested, connection, cache_control, upgrade_insecure_requests,
+			user_agent, accept, accept_encoding, accept_language;
+
+		char* response;
+
+		// TODO: parse using strstr
 
 		// Reply to client
 		if ((write(newsockfd, "I got your message", 18)) == RC_ERROR)
