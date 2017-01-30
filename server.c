@@ -52,6 +52,7 @@ int main (int argc, char* argv[]) {
 
 	// Listen for connections
 	listen(sockfd, MAX_NUM_CONNECTIONS);
+	printf("Server listening on port: %d\n", portno);
 
 	// Accept connections
 	if ((newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen)) == RC_ERROR)
@@ -64,7 +65,9 @@ int main (int argc, char* argv[]) {
 	if ((read(newsockfd, buffer, BUFFER_SIZE - 1)) == RC_ERROR)
 		error("ERROR: could not read from socket");
 
-	printf("Here is the message: %s\n", buffer);
+	printf("Here is the message: \n\n%s\n", buffer);
+
+	// TODO: process HTTP request from buffer
 
 	// Reply to client
 	if ((write(newsockfd, "I got your message", 18)) == RC_ERROR)
