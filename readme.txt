@@ -7,9 +7,6 @@ Frederick Kennedy
 -------------------------------------
 TODO
 
-Part A - Impementation
-1. Create a while loop to keep server running
-
 Part B - Specs
 1. Add a function to the web server 
 	- that parses HTTP requests from the browser

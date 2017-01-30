@@ -54,24 +54,26 @@ int main (int argc, char* argv[]) {
 	listen(sockfd, MAX_NUM_CONNECTIONS);
 	printf("Server listening on port: %d\n", portno);
 
-	// Accept connections
-	if ((newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen)) == RC_ERROR)
-		error("ERROR: could not accept connection");
+	while (1) {
+		// Accept connections
+		if ((newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen)) == RC_ERROR)
+			error("ERROR: could not accept connection");
 
-	// Read client request
-	char buffer[BUFFER_SIZE];
-	memset(buffer, 0, BUFFER_SIZE);
+		// Read client request
+		char buffer[BUFFER_SIZE];
+		memset(buffer, 0, BUFFER_SIZE);
 
-	if ((read(newsockfd, buffer, BUFFER_SIZE - 1)) == RC_ERROR)
-		error("ERROR: could not read from socket");
+		if ((read(newsockfd, buffer, BUFFER_SIZE - 1)) == RC_ERROR)
+			error("ERROR: could not read from socket");
 
-	printf("Here is the message: \n\n%s\n", buffer);
+		printf("Here is the message: \n\n%s\n", buffer);
 
-	// TODO: process HTTP request from buffer
+		// TODO: process HTTP request from buffer
 
-	// Reply to client
-	if ((write(newsockfd, "I got your message", 18)) == RC_ERROR)
-		error("ERROR: could not write to socket");
+		// Reply to client
+		if ((write(newsockfd, "I got your message", 18)) == RC_ERROR)
+			error("ERROR: could not write to socket");
+	}
 
 	return RC_SUCCESS;
 }
