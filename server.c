@@ -17,6 +17,7 @@ const int BUFFER_SIZE = 1024;
 
 // Function headers
 char* getFileRequested(char* buffer);
+char* readFile(char* filename);
 void error(char * msg);
 
 // Main
@@ -68,10 +69,14 @@ int main(int argc, char* argv[]) {
 
 		printf("Here is the message: \n\n%s\n", buffer);
 
+		// Get the filename requested
 		char* filename = getFileRequested(buffer);
 		printf("filename: %s\n", filename);
 
-		// TODO: readFile
+		// Read in the file requested
+		char* file = readFile(filename);
+		printf("file: %s\n", file);
+		
 		// TODO: generateResponse
 
 		// Test file name
@@ -113,4 +118,15 @@ char* getFileRequested(char* buffer) {
 		token = "\0";
 
 	return token;
+}
+
+char* readFile(char* filename) {
+	char* buffer;
+	FILE* fp;
+
+	// Open file if it exists
+	if ((fp = fopen(filename, "r")) == NULL)
+		buffer = "File does not exist";
+
+	return "YAY";
 }
