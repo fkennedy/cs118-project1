@@ -3,7 +3,7 @@
 #include <sys/socket.h> // definitions of structures needed for sockets, e.g. sockaddr
 #include <netinet/in.h> // constants and structures needed for internet domain addresses, e.g. sockaddr_in
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <sys/wait.h>	// for the waitpid() system call
 #include <signal.h>	    // signal name macros
 
@@ -15,12 +15,12 @@ const int RC_ERROR = -1;
 const int MAX_NUM_CONNECTIONS = 5;
 const int BUFFER_SIZE = 1024;
 
-void error (char *msg) {
-	perror(msg);
-	exit(RC_SUCCESS);
-}
+// Function headers
+char* getFileRequested(char* buffer);
+void error(char * msg);
 
-int main (int argc, char* argv[]) {
+// Main
+int main(int argc, char* argv[]) {
 	int sockfd, newsockfd, portno, pid;
 	socklen_t clilen;
 
@@ -68,9 +68,15 @@ int main (int argc, char* argv[]) {
 
 		printf("Here is the message: \n\n%s\n", buffer);
 
-		// TODO: getFileRequested
+		char* filename = getFileRequested(buffer);
+		printf("filename: %s\n", filename);
+
 		// TODO: readFile
 		// TODO: generateResponse
+
+		// Test file name
+		// if ((write(newsockfd, filename, strlen(filename))) == RC_ERROR)
+		// 	error("ERROR: could not write to socket");		
 
 		// Reply to client
 		if ((write(newsockfd, "I got your message", 18)) == RC_ERROR)
@@ -78,4 +84,33 @@ int main (int argc, char* argv[]) {
 	}
 
 	return RC_SUCCESS;
+}
+
+// Helper Functions
+void error(char *msg) {
+	perror(msg);
+	exit(RC_SUCCESS);
+}
+
+char* getFileRequested(char* buffer) {
+	// Make a copy of buffer
+	char buffercopy[BUFFER_SIZE];
+	memset(buffercopy, 0, BUFFER_SIZE);
+
+	strncpy(buffercopy, buffer, BUFFER_SIZE);
+
+	// Get first token: HTML
+	char* token = strtok(buffercopy, " ");
+	
+	// Get second token: /filename
+	token = strtok(NULL, " "); 
+
+	// Get rid of / in token
+	token++;
+
+	// If no filename, set to terminating character
+	if (strlen(token) <= 0)
+		token = "\0";
+
+	return token;
 }
