@@ -17,13 +17,9 @@ Part B - Specs
 	- browser should be able to display these images
 
 Part B - Implementation
-1. Create a HashTable with (key, value) = (String headerName, String value)
-	- e.g. ("Accept", "text/html, application/...")
-
-2. Fill HashTable by parsing HTTP request from client
-	- char *strstr(const char *haystack, const char *needle) : finds occurence of needle in haystack
-
-3. 
+1. Create a function to get the filename => getFileRequested
+2. Create a function to read the file requested into a buffer => readFile
+3. Create a function to generate the HTTP response => createResponse
 
 -------------------------------------
 NOTES
