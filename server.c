@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>	// for the waitpid() system call
-#include <signal.h>	    // signal name macros
+#include <signal.h>	    // signal name 
 
 // Return codes
 const int RC_SUCCESS = 1;
@@ -15,9 +15,16 @@ const int RC_ERROR = -1;
 const int MAX_NUM_CONNECTIONS = 5;
 const int BUFFER_SIZE = 1024;
 
+// Content-Types
+const char* HTML = "text/html";
+const char* PLAIN_TXT = "text/plan";
+const char* JPG = "image/jpg";
+const char* GIF = "image/gif";
+
 // Function headers
 char* getFileRequested(char* buffer);
 char* readFile(char* filename);
+char* generateResponse(char* filename);
 void error(char * msg);
 
 // Main
@@ -73,18 +80,11 @@ int main(int argc, char* argv[]) {
 		char* filename = getFileRequested(buffer);
 		printf("filename: %s\n", filename);
 
-		// Read in the file requested
-		char* file = readFile(filename);
-		printf("file: %s\n", file);
-		
-		// TODO: generateResponse
+		// Generate the response
+		char* response = generateResponse(filename);
 
-		// Test file name
-		// if ((write(newsockfd, filename, strlen(filename))) == RC_ERROR)
-		// 	error("ERROR: could not write to socket");		
-
-		// Reply to client
-		if ((write(newsockfd, "I got your message", 18)) == RC_ERROR)
+		// Send HTTP response to client
+		if ((write(newsockfd, response, strlen(response))) == RC_ERROR)
 			error("ERROR: could not write to socket");
 	}
 
@@ -123,10 +123,38 @@ char* getFileRequested(char* buffer) {
 char* readFile(char* filename) {
 	char* buffer;
 	FILE* fp;
+	int filesize;
 
+	// TODO: filename isn't working
 	// Open file if it exists
-	if ((fp = fopen(filename, "r")) == NULL)
-		buffer = "File does not exist";
+	if ((fp = fopen("readme.txt", "r")) == NULL) {
+		perror("fopen");
+		return "File does not exist";
+	}
+	
+	// Get filesize
+	fseek(fp, 0, SEEK_END);
+	filesize = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
 
-	return "YAY";
+	// Read file into buffer
+	buffer = malloc(filesize + 1);
+	fread(buffer, filesize, 1, fp);
+	fclose(fp);
+
+	return buffer;
+}
+
+char* generateResponse(char* filename) {
+	char header[BUFFER_SIZE];
+	char* file = readFile(filename);
+
+	// Headers
+	const char* HTTP = "HTTP/1.1";
+
+	// Status codes
+	const char* STATUS_OK = "200 OK";
+	const char* STATUS_NOT_FOUND = "404 Not Found";
+
+	return file;
 }
