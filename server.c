@@ -253,6 +253,9 @@ char* generateResponse(int sockfd, const char* filename) {
 	memcpy(traverse, getCurrentTime(), strlen(getCurrentTime())); traverse += strlen(getCurrentTime());
 	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
 
+	memcpy(traverse, "Server: Jeddie/1.0", strlen("Server: Jeddie/1.0")); traverse += strlen("Server: Jeddie/1.0");
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
+
 	memcpy(traverse, "Last-Modified: ", strlen("Last-Modified: ")); traverse += strlen("Last-Modified: ");
 	memcpy(traverse, lm, strlen(lm)); traverse += strlen(lm);
 	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
