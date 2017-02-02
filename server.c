@@ -255,10 +255,14 @@ char* generateResponse(int sockfd, const char* filename) {
 	memcpy(traverse, connection, strlen(connection)); traverse += strlen(connection);
 	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
 
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
+
 	printf("\n\n%s\n\n", response);
 
-	// TODO: Send HTTP Response
-	// TODO: Send file
+	// Send HTTP Response
+	send(sockfd, response, strlen(response), 0);
+
+	// Send file
 
 	return "sup";
 }
