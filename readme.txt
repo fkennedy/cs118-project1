@@ -2,7 +2,7 @@
 CS118 Project 1
 
 Johnathan Estacio 404491851
-Frederick Kennedy
+Frederick Kennedy 404667930
 
 -------------------------------------
 TODO
