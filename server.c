@@ -157,16 +157,21 @@ char* readFile(const char* filename) {
 	return buffer;
 }
 
-time_t getLastModified(const char *filename) {
+
+
+char* getLastModified(const char *filename) {
 	struct stat statbuf;
+	char* lm;
 	if (stat(filename, &statbuf) == RC_ERROR)
 		perror(filename);
-	return statbuf.st_mtime;
+	// size_t len = strlen(buf); // will calculate number of non-0 symbols before first 0
+	// char * newBuf = (char *)malloc(len); // allocate memory for new array, don't forget to free it later
+	// memcpy(newBuf, buf, len); // copy data from old buf to new one
+	return ctime(&statbuf.st_mtime);
 }
 
 char* generateResponse(int sockfd, const char* filename) {
-	char response[BUFFER_SIZE];
-	memset(response, 0, BUFFER_SIZE);
+	char* response = malloc(sizeof(char) * BUFFER_SIZE);
 
 	// Headers
 	char header[BUFFER_SIZE];
@@ -175,9 +180,8 @@ char* generateResponse(int sockfd, const char* filename) {
 	char* date;
 	time_t current_time;
 	char* lm;
-	time_t last_modified;
 	char* server;
-	int contentlen;
+	char* contentlen = malloc(sizeof(int));
 	char* contenttype;
 	char* connection;
 
@@ -195,17 +199,16 @@ char* generateResponse(int sockfd, const char* filename) {
 	// File not found
 	if (strcmp(file, FILE_NOT_FOUND) == 0) {
 		status = STATUS_NOT_FOUND;
-		contentlen = strlen(STATUS_NOT_FOUND_RESPONSE);
+		sprintf(contentlen, "%d", (int) strlen(STATUS_NOT_FOUND_RESPONSE));
 		contenttype = PLAIN_TXT;
 	}
 
 	// File found
 	else {
 		status = STATUS_OK;
-		contentlen = strlen(file);
+		sprintf(contentlen, "%d", (int) strlen(file));
 		
-		last_modified = getLastModified(filename);
-		lm = ctime(&last_modified);
+		lm = getLastModified(filename);
 		
 		char* filext = strrchr(filename, '.') + 1;
 	
@@ -219,7 +222,7 @@ char* generateResponse(int sockfd, const char* filename) {
 			contenttype = GIF;
 		else {
 			status = STATUS_NOT_FOUND;
-			contentlen = strlen(STATUS_NOT_FOUND_RESPONSE);
+			sprintf(contentlen, "%d", (int) strlen(STATUS_NOT_FOUND_RESPONSE));
 			contenttype = PLAIN_TXT;
 		}
 	}
@@ -229,8 +232,28 @@ char* generateResponse(int sockfd, const char* filename) {
 
 	memcpy(traverse, http, strlen(http)); traverse += strlen(http);
 	memcpy(traverse, SPACE, strlen(SPACE)); traverse += strlen(SPACE);
-	// memcpy(traverse, status, strlen(status)); traverse += strlen(status);
-	// memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
+	memcpy(traverse, status, strlen(status)); traverse += strlen(status);
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
+
+	memcpy(traverse, "Date: ", strlen("Date: ")); traverse += strlen("Date: ");
+	memcpy(traverse, date, strlen(date)); traverse += strlen(date);
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
+
+	memcpy(traverse, "Last-Modified: ", strlen("Last-Modified: ")); traverse += strlen("Last-Modified: ");
+	memcpy(traverse, lm, strlen(lm)); traverse += strlen(lm);
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
+
+	memcpy(traverse, "Content-Length: ", strlen("Content-Length: ")); traverse += strlen("Content-Length: ");
+	memcpy(traverse, contentlen, strlen(contentlen)); traverse += strlen(contentlen);
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
+
+	memcpy(traverse, "Content-Type: ", strlen("Content-Type: ")); traverse += strlen("Content-Type: ");
+	memcpy(traverse, contenttype, strlen(contenttype)); traverse += strlen(contenttype);
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
+
+	memcpy(traverse, "Connection: ", strlen("Connection: ")); traverse += strlen("Connection: ");
+	memcpy(traverse, connection, strlen(connection)); traverse += strlen(connection);
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
 
 	printf("\n\n%s\n\n", response);
 
