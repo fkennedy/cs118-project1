@@ -23,6 +23,7 @@
 #define MAX_NUM_CONNECTIONS 5
 #define BUFFER_SIZE 1024
 #define CARRIAGE_RETURN "\r\n"
+#define SPACE " "
 
 // Content-Types
 #define HTML "text/html"
@@ -164,7 +165,8 @@ time_t getLastModified(const char *filename) {
 }
 
 char* generateResponse(int sockfd, const char* filename) {
-	char* response;
+	char response[BUFFER_SIZE];
+	memset(response, 0, BUFFER_SIZE);
 
 	// Headers
 	char header[BUFFER_SIZE];
@@ -225,10 +227,10 @@ char* generateResponse(int sockfd, const char* filename) {
 	// Create HTTP Response
 	char* traverse = response;
 
-	memcpy(traverse, http, strlen(http));
-	traverse += strlen(http);
-	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN));
-	traverse += strlen(CARRIAGE_RETURN);
+	memcpy(traverse, http, strlen(http)); traverse += strlen(http);
+	memcpy(traverse, SPACE, strlen(SPACE)); traverse += strlen(SPACE);
+	// memcpy(traverse, status, strlen(status)); traverse += strlen(status);
+	// memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
 
 	printf("\n\n%s\n\n", response);
 
