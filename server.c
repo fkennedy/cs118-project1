@@ -141,7 +141,7 @@ char* readFile(const char* filename) {
 
 	// TODO: filename isn't working
 	// Open file if it exists
-	if ((fp = fopen(filename, "r")) == NULL)
+	if ((fp = fopen(filename, "rb")) == NULL)
 		return FILE_NOT_FOUND;
 	
 	// Get filesize
@@ -152,6 +152,7 @@ char* readFile(const char* filename) {
 	// Read file into buffer
 	buffer = malloc(filesize + 1);
 	fread(buffer, filesize, 1, fp);
+	buffer[filesize] = '\0';
 	fclose(fp);
 
 	return buffer;
@@ -264,6 +265,9 @@ char* generateResponse(int sockfd, const char* filename) {
 	memcpy(traverse, contenttype, strlen(contenttype)); traverse += strlen(contenttype);
 	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
 
+	memcpy(traverse, "Content-Disposition: inline", strlen("Content-Disposition: inline")); traverse += strlen("Content-Disposition: inline");
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
+
 	memcpy(traverse, "Connection: ", strlen("Connection: ")); traverse += strlen("Connection: ");
 	memcpy(traverse, connection, strlen(connection)); traverse += strlen(connection);
 	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
@@ -276,6 +280,7 @@ char* generateResponse(int sockfd, const char* filename) {
 	send(sockfd, response, strlen(response), 0);
 
 	// Send file
+	send(sockfd, file, strlen(file), 0);
 
 	return "sup";
 }
