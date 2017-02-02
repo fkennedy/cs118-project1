@@ -5,26 +5,39 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>	// for the waitpid() system call
-#include <signal.h>	    // signal name 
+#include <signal.h>	    // signal name
+#include <unistd.h>
+#include <time.h>
+#include <sys/stat.h>
 
 // Return codes
-const int RC_SUCCESS = 1;
-const int RC_ERROR = -1;
+#define RC_SUCCESS 1
+#define RC_ERROR -1
+
+// Return strings
+#define FILE_NOT_FOUND "File not found."
+#define STATUS_NOT_FOUND_RESPONSE "File does not exist."
+#define FILE_TYPE_NOT_SUPPORTED "File type not supported."
 
 // Constants
-const int MAX_NUM_CONNECTIONS = 5;
-const int BUFFER_SIZE = 1024;
+#define MAX_NUM_CONNECTIONS 5
+#define BUFFER_SIZE 1024
+#define CARRIAGE_RETURN "\r\n"
 
 // Content-Types
-const char* HTML = "text/html";
-const char* PLAIN_TXT = "text/plan";
-const char* JPG = "image/jpg";
-const char* GIF = "image/gif";
+#define HTML "text/html"
+#define PLAIN_TXT "text/plain"
+#define JPG "image/jpg"
+#define GIF "image/gif"
+
+// Status codes
+#define STATUS_OK "200 OK"
+#define STATUS_NOT_FOUND "404 Not Found"
 
 // Function headers
 char* getFileRequested(char* buffer);
-char* readFile(char* filename);
-char* generateResponse(char* filename);
+char* readFile(const char* filename);
+char* generateResponse(int sockfd, const char* filename);
 void error(char * msg);
 
 // Main
@@ -81,11 +94,11 @@ int main(int argc, char* argv[]) {
 		printf("filename: %s\n", filename);
 
 		// Generate the response
-		char* response = generateResponse(filename);
+		char* response = generateResponse(newsockfd, filename);
 
 		// Send HTTP response to client
-		if ((write(newsockfd, response, strlen(response))) == RC_ERROR)
-			error("ERROR: could not write to socket");
+		// if ((write(newsockfd, response, strlen(response))) == RC_ERROR)
+		// 	error("ERROR: could not write to socket");
 	}
 
 	return RC_SUCCESS;
@@ -120,17 +133,15 @@ char* getFileRequested(char* buffer) {
 	return token;
 }
 
-char* readFile(char* filename) {
+char* readFile(const char* filename) {
 	char* buffer;
 	FILE* fp;
 	int filesize;
 
 	// TODO: filename isn't working
 	// Open file if it exists
-	if ((fp = fopen("readme.txt", "r")) == NULL) {
-		perror("fopen");
-		return "File does not exist";
-	}
+	if ((fp = fopen(filename, "r")) == NULL)
+		return FILE_NOT_FOUND;
 	
 	// Get filesize
 	fseek(fp, 0, SEEK_END);
@@ -145,16 +156,84 @@ char* readFile(char* filename) {
 	return buffer;
 }
 
-char* generateResponse(char* filename) {
-	char header[BUFFER_SIZE];
-	char* file = readFile(filename);
+time_t getLastModified(const char *filename) {
+	struct stat statbuf;
+	if (stat(filename, &statbuf) == RC_ERROR)
+		perror(filename);
+	return statbuf.st_mtime;
+}
+
+char* generateResponse(int sockfd, const char* filename) {
+	char* response;
 
 	// Headers
-	const char* HTTP = "HTTP/1.1";
+	char header[BUFFER_SIZE];
+	char* http;
+	char* status;
+	char* date;
+	time_t current_time;
+	char* lm;
+	time_t last_modified;
+	char* server;
+	int contentlen;
+	char* contenttype;
+	char* connection;
 
-	// Status codes
-	const char* STATUS_OK = "200 OK";
-	const char* STATUS_NOT_FOUND = "404 Not Found";
+	http = "HTTP/1.1";
 
-	return file;
+	time(&current_time);
+	date = ctime(&current_time);
+
+	connection = "Closed";
+
+	// TODO: server
+
+	char* file = readFile(filename);
+
+	// File not found
+	if (strcmp(file, FILE_NOT_FOUND) == 0) {
+		status = STATUS_NOT_FOUND;
+		contentlen = strlen(STATUS_NOT_FOUND_RESPONSE);
+		contenttype = PLAIN_TXT;
+	}
+
+	// File found
+	else {
+		status = STATUS_OK;
+		contentlen = strlen(file);
+		
+		last_modified = getLastModified(filename);
+		lm = ctime(&last_modified);
+		
+		char* filext = strrchr(filename, '.') + 1;
+	
+		if (strcmp(filext, "html") == 0) 
+			contenttype = HTML;
+		else if (strcmp(filext, "txt") == 0) 
+			contenttype = PLAIN_TXT;
+		else if (strcmp(filext, "jpg") == 0) 
+			contenttype = JPG;
+		else if (strcmp(filext, "gif") == 0) 
+			contenttype = GIF;
+		else {
+			status = STATUS_NOT_FOUND;
+			contentlen = strlen(STATUS_NOT_FOUND_RESPONSE);
+			contenttype = PLAIN_TXT;
+		}
+	}
+
+	// Create HTTP Response
+	char* traverse = response;
+
+	memcpy(traverse, http, strlen(http));
+	traverse += strlen(http);
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN));
+	traverse += strlen(CARRIAGE_RETURN);
+
+	printf("\n\n%s\n\n", response);
+
+	// TODO: Send HTTP Response
+	// TODO: Send file
+
+	return "sup";
 }
