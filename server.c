@@ -161,7 +161,7 @@ char* readFile(const char* filename) {
 char* getCurrentTime() {
 	struct tm* clock;
 	time_t cur;
-	char current_time[50];
+	char* current_time = malloc(50);
 
 	time(&cur);
 	clock = gmtime(&cur);
@@ -175,7 +175,7 @@ char* getCurrentTime() {
 char* getLastModified(const char *filename) {
 	struct stat statbuf;
 	struct tm* clock;
-	char lm[50];
+	char* lm = malloc(50);
 
 	if (stat(filename, &statbuf) == RC_ERROR)
 		perror(filename);
