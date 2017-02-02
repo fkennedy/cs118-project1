@@ -157,17 +157,34 @@ char* readFile(const char* filename) {
 	return buffer;
 }
 
+char* getCurrentTime() {
+	struct tm* clock;
+	time_t cur;
+	char current_time[50];
 
+	time(&cur);
+	clock = gmtime(&cur);
+
+	memset(current_time, 0, 50);
+	strftime(current_time, 50, "%a, %d %b %Y %T %Z", clock);
+
+	return current_time;
+}
 
 char* getLastModified(const char *filename) {
 	struct stat statbuf;
-	char* lm;
+	struct tm* clock;
+	char lm[50];
+
 	if (stat(filename, &statbuf) == RC_ERROR)
 		perror(filename);
-	// size_t len = strlen(buf); // will calculate number of non-0 symbols before first 0
-	// char * newBuf = (char *)malloc(len); // allocate memory for new array, don't forget to free it later
-	// memcpy(newBuf, buf, len); // copy data from old buf to new one
-	return ctime(&statbuf.st_mtime);
+
+	clock = gmtime(&(statbuf.st_mtime));
+	
+	memset(lm, 0, 50);
+	strftime(lm, 50, "%a, %d %b %Y %T %Z", clock);
+
+	return lm;
 }
 
 char* generateResponse(int sockfd, const char* filename) {
@@ -177,8 +194,8 @@ char* generateResponse(int sockfd, const char* filename) {
 	char header[BUFFER_SIZE];
 	char* http;
 	char* status;
-	char* date;
-	time_t current_time;
+	// char date[50] = getCurrentTime();
+	
 	char* lm;
 	char* server;
 	char* contentlen = malloc(sizeof(int));
@@ -186,10 +203,6 @@ char* generateResponse(int sockfd, const char* filename) {
 	char* connection;
 
 	http = "HTTP/1.1";
-
-	time(&current_time);
-	date = ctime(&current_time);
-
 	connection = "Closed";
 
 	// TODO: server
@@ -234,9 +247,9 @@ char* generateResponse(int sockfd, const char* filename) {
 	memcpy(traverse, SPACE, strlen(SPACE)); traverse += strlen(SPACE);
 	memcpy(traverse, status, strlen(status)); traverse += strlen(status);
 	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
-
+	
 	memcpy(traverse, "Date: ", strlen("Date: ")); traverse += strlen("Date: ");
-	memcpy(traverse, date, strlen(date)); traverse += strlen(date);
+	memcpy(traverse, getCurrentTime(), strlen(getCurrentTime())); traverse += strlen(getCurrentTime());
 	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
 
 	memcpy(traverse, "Last-Modified: ", strlen("Last-Modified: ")); traverse += strlen("Last-Modified: ");
@@ -255,10 +268,14 @@ char* generateResponse(int sockfd, const char* filename) {
 	memcpy(traverse, connection, strlen(connection)); traverse += strlen(connection);
 	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
 
+	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
+
 	printf("\n\n%s\n\n", response);
 
-	// TODO: Send HTTP Response
-	// TODO: Send file
+	// Send HTTP Response
+	send(sockfd, response, strlen(response), 0);
+
+	// Send file
 
 	return "sup";
 }
