@@ -50,8 +50,8 @@ int main(int argc, char* argv[]) {
 
 	// Validate args
 	if (argc < 2) {
-         fprintf(stderr,"ERROR: no port provided\n");
-         exit(RC_SUCCESS);
+		 fprintf(stderr,"ERROR: no port provided\n");
+		 exit(RC_SUCCESS);
 	}
 
 	// Create socket
@@ -188,6 +188,25 @@ char* getLastModified(const char *filename) {
 	return lm;
 }
 
+size_t getFileSize(const char *filename) {
+	char* sendbuf;
+	FILE* requested_file;
+	long fileLength;
+	size_t result;
+
+	requested_file = fopen(filename, "rb");
+
+	fseek (requested_file, 0, SEEK_END);
+	fileLength = ftell(requested_file);
+	fseek(requested_file, 0, SEEK_SET);
+
+	sendbuf = malloc(sizeof(char) * fileLength);
+	result = fread(sendbuf, sizeof(char), fileLength, requested_file);
+
+	free(sendbuf);
+	return result;
+}
+
 char* generateResponse(int sockfd, const char* filename) {
 	char* response = malloc(sizeof(char) * BUFFER_SIZE);
 
@@ -199,7 +218,12 @@ char* generateResponse(int sockfd, const char* filename) {
 	
 	char* lm;
 	char* server;
-	char* contentlen = malloc(sizeof(int));
+	
+	// char* contentlen = malloc(sizeof(int));
+	size_t filesize = getFileSize(filename);
+	const int n = snprintf(NULL, 0, "%lu", filesize);
+	char contentlen[n+1];
+
 	char* contenttype;
 	char* connection;
 
@@ -220,7 +244,8 @@ char* generateResponse(int sockfd, const char* filename) {
 	// File found
 	else {
 		status = STATUS_OK;
-		sprintf(contentlen, "%d", (int) strlen(file));
+		// sprintf(contentlen, "%d", (int) strlen(file));
+		snprintf(contentlen, n+1, "%lu", filesize);
 		
 		lm = getLastModified(filename);
 		
@@ -283,7 +308,7 @@ char* generateResponse(int sockfd, const char* filename) {
 	send(sockfd, response, strlen(response), 0);
 
 	// Send file
-	send(sockfd, file, strlen(file), 0);
+	send(sockfd, file, filesize, 0);
 
 	return "sup";
 }
