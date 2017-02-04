@@ -16,8 +16,8 @@
 
 // Return strings
 #define FILE_NOT_FOUND "File not found."
-#define STATUS_NOT_FOUND_RESPONSE "File does not exist."
 #define FILE_TYPE_NOT_SUPPORTED "File type not supported."
+#define NOT_FOUND_404_RESPONSE "<h1>404: File Not Found :(</h1>"
 
 // Constants
 #define MAX_NUM_CONNECTIONS 5
@@ -29,6 +29,7 @@
 #define HTML "text/html"
 #define PLAIN_TXT "text/plain"
 #define JPG "image/jpg"
+#define JPEG "image/jpeg"
 #define GIF "image/gif"
 
 // Status codes
@@ -38,7 +39,7 @@
 // Function headers
 char* getFileRequested(char* buffer);
 char* readFile(const char* filename);
-char* generateResponse(int sockfd, const char* filename);
+int generateResponse(int sockfd, const char* filename);
 void error(char * msg);
 char* getCurrentTime();
 char* getLastModified(const char *filename);
@@ -95,14 +96,13 @@ int main(int argc, char* argv[]) {
 
 		// Get the filename requested
 		char* filename = getFileRequested(buffer);
-		// printf("filename: %s\n", filename);
 
-		// Generate the response
-		char* response = generateResponse(newsockfd, filename);
+		// Generate and send the response
+		if (!generateResponse(newsockfd, filename))
+			error("ERROR: could not generate response");
 
-		// Send HTTP response to client
-		// if ((write(newsockfd, response, strlen(response))) == RC_ERROR)
-		// 	error("ERROR: could not write to socket");
+		// End the connection
+		close(newsockfd);
 	}
 
 	return RC_SUCCESS;
@@ -210,7 +210,7 @@ size_t getFileSize(const char *filename) {
 	return result;
 }
 
-char* generateResponse(int sockfd, const char* filename) {
+int generateResponse(int sockfd, const char* filename) {
 	char* response = malloc(sizeof(char) * BUFFER_SIZE);
 
 	// Headers
@@ -233,14 +233,13 @@ char* generateResponse(int sockfd, const char* filename) {
 	http = "HTTP/1.1";
 	connection = "Closed";
 
-	// TODO: server
-
 	char* file = readFile(filename);
 
 	// File not found
 	if (strcmp(file, FILE_NOT_FOUND) == 0) {
+		file = NOT_FOUND_404_RESPONSE;
 		status = STATUS_NOT_FOUND;
-		sprintf(contentlen, "%d", (int) strlen(STATUS_NOT_FOUND_RESPONSE));
+		sprintf(contentlen, "%d", (int) strlen(NOT_FOUND_404_RESPONSE));
 		contenttype = PLAIN_TXT;
 	}
 
@@ -260,11 +259,13 @@ char* generateResponse(int sockfd, const char* filename) {
 			contenttype = PLAIN_TXT;
 		else if (strcmp(filext, "jpg") == 0) 
 			contenttype = JPG;
+		else if (strcmp(filext, "jpeg") == 0)
+			contenttype = JPEG;
 		else if (strcmp(filext, "gif") == 0) 
 			contenttype = GIF;
 		else {
 			status = STATUS_NOT_FOUND;
-			sprintf(contentlen, "%d", (int) strlen(STATUS_NOT_FOUND_RESPONSE));
+			sprintf(contentlen, "%d", (int) strlen(NOT_FOUND_404_RESPONSE));
 			contenttype = PLAIN_TXT;
 		}
 	}
@@ -313,5 +314,5 @@ char* generateResponse(int sockfd, const char* filename) {
 	// Send file
 	send(sockfd, file, filesize, 0);
 
-	return "sup";
+	return RC_SUCCESS;
 }
