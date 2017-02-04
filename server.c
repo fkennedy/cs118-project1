@@ -45,6 +45,9 @@ char* getCurrentTime();
 char* getLastModified(const char *filename);
 size_t getFileSize(const char *filename);
 
+// Global variable
+int file_found = 0;
+
 // Main
 int main(int argc, char* argv[]) {
 	int sockfd, newsockfd, portno, pid;
@@ -223,9 +226,8 @@ int generateResponse(int sockfd, const char* filename) {
 	char* server;
 	
 	// char* contentlen = malloc(sizeof(int));
-	size_t filesize = getFileSize(filename);
-	const int n = snprintf(NULL, 0, "%lu", filesize);
-	char contentlen[n+1];
+	size_t filesize;
+	char* contentlen;
 
 	char* contenttype;
 	char* connection;
@@ -241,12 +243,18 @@ int generateResponse(int sockfd, const char* filename) {
 		status = STATUS_NOT_FOUND;
 		sprintf(contentlen, "%d", (int) strlen(NOT_FOUND_404_RESPONSE));
 		contenttype = PLAIN_TXT;
+		contentlen = "0\0";
+		filesize = 0;
 	}
 
 	// File found
 	else {
+		file_found = 1;
 		status = STATUS_OK;
-		// sprintf(contentlen, "%d", (int) strlen(file));
+
+		filesize = getFileSize(filename);
+		const int n = snprintf(NULL, 0, "%lu", filesize);
+		contentlen = malloc(n+1);
 		snprintf(contentlen, n+1, "%lu", filesize);
 		
 		lm = getLastModified(filename);
@@ -306,12 +314,12 @@ int generateResponse(int sockfd, const char* filename) {
 
 	memcpy(traverse, CARRIAGE_RETURN, strlen(CARRIAGE_RETURN)); traverse += strlen(CARRIAGE_RETURN);
 
-	printf("\n\n%s\n\n", response);
-
 	// Send HTTP Response
 	send(sockfd, response, strlen(response), 0);
 
 	// Send file
+	if((contenttype != GIF) || (contenttype != HTML))
+		file[filesize] = (char) 0;
 	send(sockfd, file, filesize, 0);
 
 	return RC_SUCCESS;
