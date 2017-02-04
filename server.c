@@ -40,6 +40,9 @@ char* getFileRequested(char* buffer);
 char* readFile(const char* filename);
 char* generateResponse(int sockfd, const char* filename);
 void error(char * msg);
+char* getCurrentTime();
+char* getLastModified(const char *filename);
+size_t getFileSize(const char *filename);
 
 // Main
 int main(int argc, char* argv[]) {
@@ -92,7 +95,7 @@ int main(int argc, char* argv[]) {
 
 		// Get the filename requested
 		char* filename = getFileRequested(buffer);
-		printf("filename: %s\n", filename);
+		// printf("filename: %s\n", filename);
 
 		// Generate the response
 		char* response = generateResponse(newsockfd, filename);
